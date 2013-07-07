@@ -1,0 +1,5 @@
+Framegrab - work in progress!
+
+This is a simple v4l2 image capture library released under a permissive
+license. Yes, there are many libraries that do exactly that, in a better
+and more complete way, but I needed something not bound to (L)GPL limitations.
