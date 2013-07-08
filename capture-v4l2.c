@@ -5,11 +5,12 @@
 #include <sys/fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <sys/select.h>
 #include <unistd.h>
 #include <linux/videodev2.h>
 #include <errno.h>
 #include "framegrab.h"
-#include "common.h"
+#include "capture.h"
 
 #define MAX_FORMATS 8
 
@@ -225,6 +226,36 @@ static int set_format(fg_handle handle, int width, int height)
 
 static int get_frame(fg_handle handle, void *data)
 {
+	struct handle_data *h = (struct handle_data *)handle;
+	struct v4l2_buffer buf = { 0 };
+	struct timeval tv = { 0 };
+	fd_set fds;
+
+	buf.type = h->fmtdesc[0].type;
+	buf.memory = V4L2_MEMORY_MMAP;
+	buf.index = 0;
+	if (ioctl(h->fd, VIDIOC_QBUF, &buf) < 0) {
+		perror("VIDIOC_QBUF");
+		return -1;
+	}
+
+	FD_ZERO(&fds);
+	FD_SET(h->fd, &fds);
+
+	tv.tv_sec = 2;
+	if (select(h->fd + 1, &fds, NULL, NULL, &tv) < 0) {
+		perror("select");
+		return -1;
+	}
+
+	if (ioctl(h->fd, VIDIOC_DQBUF, &buf) < 0) {
+		perror("VIDIOC_DQBUF");
+		return -1;
+	}
+	printf("length: %ld\n", h->buffers[0].length);
+
+	memcpy(data, h->buffers[0].start, h->buffers[0].length);
+
 	return 0;
 }
 

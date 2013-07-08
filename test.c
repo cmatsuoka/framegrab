@@ -36,6 +36,7 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+	/* YUYV buffer */
 	data = malloc(width * height * 2);
 	if (data == NULL) {
 		perror("malloc");
@@ -48,6 +49,7 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+	/* RGB24 buffer */
 	image.width = width;
 	image.height = height;
 	image.rgb = malloc(width * height * 3);

@@ -1,5 +1,5 @@
 #include "framegrab.h"
-#include "common.h"
+#include "capture.h"
 
 extern struct fg_driver v4l2_driver;
 
