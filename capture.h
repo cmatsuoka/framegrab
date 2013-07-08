@@ -8,8 +8,8 @@ struct fg_driver {
 	int (*deinit)(fg_handle);
 	int (*start)(fg_handle);
 	int (*stop)(fg_handle);
-	int (*set_format)(fg_handle, int, int);
-	int (*get_frame)(fg_handle, void *);
+	int (*set_format)(fg_handle, struct fg_image *);
+	int (*get_frame)(fg_handle, struct fg_image *);
 };
 
 #endif

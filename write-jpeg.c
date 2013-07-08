@@ -1,16 +1,36 @@
 #include <stdio.h>
 #include <jpeglib.h>
 #include <setjmp.h>
-
+#include <stdlib.h>
+#include <string.h>
 #include "framegrab.h"
+#include "convert.h"
 
-int write_jpeg(char *filename, int quality, struct fg_image *data)
+int fg_write_jpeg(char *filename, int quality, struct fg_image *image)
 {
 	struct jpeg_compress_struct cinfo;
 	struct jpeg_error_mgr jerr;
 	FILE *f;
 	JSAMPROW row_pointer[1];	/* pointer to JSAMPLE row[s] */
 	int stride;			/* physical row width in image buffer */
+	unsigned char *data;
+
+	data = malloc(image->width * image->height * 3);
+	if (data == NULL)
+		goto err;
+
+	/* Convert to RGB 24 */
+	switch (image->format) {
+	case FG_FORMAT_YUYV:
+		yuyv2rgb(data, image->data, image->width, image->height);
+		break;
+	case FG_FORMAT_RGB24:
+		memcpy(data, image->data, image->width * image->height * 3);
+		break;
+	default:
+		return -1;
+	};
+
 
 	/* Allocate and initialize JPEG compression object */
 	cinfo.err = jpeg_std_error(&jerr);
@@ -18,13 +38,13 @@ int write_jpeg(char *filename, int quality, struct fg_image *data)
 
 	if ((f = fopen(filename, "wb")) == NULL) {
 		fprintf(stderr, "can't open %s\n", filename);
-		return -1;
+		goto err1;
 	}
 	jpeg_stdio_dest(&cinfo, f);
 
 	/* Set parameters for compression */
-	cinfo.image_width = data->width;
-	cinfo.image_height = data->height;
+	cinfo.image_width = image->width;
+	cinfo.image_height = image->height;
 	cinfo.input_components = 3;	/* # of color components per pixel */
 
 	jpeg_set_defaults(&cinfo);
@@ -32,10 +52,10 @@ int write_jpeg(char *filename, int quality, struct fg_image *data)
 
 	/* Run compressor */
 	jpeg_start_compress(&cinfo, TRUE);
-	stride = data->width * 3;
+	stride = image->width * 3;
 
 	while (cinfo.next_scanline < cinfo.image_height) {
-		row_pointer[0] = &data->rgb[cinfo.next_scanline * stride];
+		row_pointer[0] = &data[cinfo.next_scanline * stride];
 		jpeg_write_scanlines(&cinfo, row_pointer, 1);
 	}
 
@@ -45,6 +65,11 @@ int write_jpeg(char *filename, int quality, struct fg_image *data)
 	jpeg_destroy_compress(&cinfo);
 
 	return 0;
+
+      err1:
+	free(data);
+      err:
+	return -1;
 }
 
 /*

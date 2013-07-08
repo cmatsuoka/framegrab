@@ -1,15 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "framegrab.h"
-#include "convert.h"
-#include "format.h"
 
 int main(int argc, char **argv)
 {
 	fg_handle h;
-	struct fg_image image;
-	unsigned char *data;
-	int width, height;
+	struct fg_image *image;
 
 	if (argc < 2) {
 		fprintf(stderr, "usage: %s <videodev>\n", argv[0]);
@@ -22,10 +18,13 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	width = 640;
-	height = 480;
-	printf("set format to %dx%d\n", width, height);
-	if (fg_set_format(h, width, height) < 0) {
+	if ((image = fg_create_image(640, 480, FG_FORMAT_YUYV)) == NULL) {
+		perror("fg_create_image");
+		exit(EXIT_FAILURE);
+	}
+
+	printf("set format to %dx%d\n", image->width, image->height);
+	if (fg_set_format(h, image) < 0) {
 		perror("fg_set_format");
 		exit(EXIT_FAILURE);
 	}
@@ -36,30 +35,16 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	/* YUYV buffer */
-	data = malloc(width * height * 2);
-	if (data == NULL) {
-		perror("malloc");
-		exit(EXIT_FAILURE);
-	}
-
 	printf("get a frame\n");
-	if (fg_get_frame(h, data) < 0) {
+	if (fg_get_frame(h, image) < 0) {
 		perror("fg_set_format");
 		exit(EXIT_FAILURE);
 	}
 
-	/* RGB24 buffer */
-	image.width = width;
-	image.height = height;
-	image.rgb = malloc(width * height * 3);
-	if (image.rgb == NULL) {
-		perror("malloc");
+	if (fg_write_jpeg("teste.jpg", 80, image) < 0) {
+		perror("fg_write_jpeg");
 		exit(EXIT_FAILURE);
 	}
-
-	yuyv2rgb(image.rgb, data, width, height);
-	write_jpeg("teste.jpg", 80, &image);
 
 	printf("stop capture\n");
 	if (fg_stop(h) < 0) {

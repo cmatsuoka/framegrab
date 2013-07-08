@@ -25,12 +25,12 @@ int fg_stop(fg_handle handle)
 	return driver->stop(handle);
 }
 
-int fg_set_format(fg_handle handle, int width, int height)
+int fg_set_format(fg_handle handle, struct fg_image *image)
 {
-	return driver->set_format(handle, width, height);
+	return driver->set_format(handle, image);
 }
 
-int fg_get_frame(fg_handle handle, void *data)
+int fg_get_frame(fg_handle handle, struct fg_image *image)
 {
-	return driver->get_frame(handle, data);
+	return driver->get_frame(handle, image);
 }

@@ -197,7 +197,7 @@ static int stop_streaming(fg_handle handle)
 	return 0;
 }
 
-static int set_format(fg_handle handle, int width, int height)
+static int set_format(fg_handle handle, struct fg_image *image)
 {
 	struct handle_data *h = (struct handle_data *)handle;
 	struct v4l2_requestbuffers reqbufs;
@@ -212,9 +212,9 @@ static int set_format(fg_handle handle, int width, int height)
 	h->format.type = h->fmtdesc[0].type;
 	h->format.fmt.pix.pixelformat = h->fmtdesc[0].pixelformat;
 	h->format.fmt.pix.field = V4L2_FIELD_ANY;
-	h->format.fmt.pix.width = width;
-	h->format.fmt.pix.height = height;
-	h->format.fmt.pix.bytesperline = width * 2;	/* FIXME */
+	h->format.fmt.pix.width = image->width;
+	h->format.fmt.pix.height = image->height;
+	h->format.fmt.pix.bytesperline = image->width * image->bytes_per_pixel;
 
 	if (ioctl(h->fd, VIDIOC_S_FMT, &h->format) < 0) {
 		perror("VIDIOC_S_FMT");
@@ -224,12 +224,13 @@ static int set_format(fg_handle handle, int width, int height)
 	return 0;
 }
 
-static int get_frame(fg_handle handle, void *data)
+static int get_frame(fg_handle handle, struct fg_image *image)
 {
 	struct handle_data *h = (struct handle_data *)handle;
 	struct v4l2_buffer buf = { 0 };
 	struct timeval tv = { 0 };
 	fd_set fds;
+	int length;
 
 	buf.type = h->fmtdesc[0].type;
 	buf.memory = V4L2_MEMORY_MMAP;
@@ -252,9 +253,12 @@ static int get_frame(fg_handle handle, void *data)
 		perror("VIDIOC_DQBUF");
 		return -1;
 	}
-	printf("length: %ld\n", h->buffers[0].length);
 
-	memcpy(data, h->buffers[0].start, h->buffers[0].length);
+	length = image->width * image->height * image->bytes_per_pixel;
+	if (length != h->buffers[0].length)
+		return -1;
+
+	memcpy(image->data, h->buffers[0].start, h->buffers[0].length);
 
 	return 0;
 }
