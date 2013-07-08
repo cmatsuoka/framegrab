@@ -196,7 +196,7 @@ static int stop_streaming(fg_handle handle)
 	return 0;
 }
 
-static int set_format(fg_handle handle, struct fg_format *fmt)
+static int set_format(fg_handle handle, int width, int height)
 {
 	struct handle_data *h = (struct handle_data *)handle;
 	struct v4l2_requestbuffers reqbufs;
@@ -211,9 +211,9 @@ static int set_format(fg_handle handle, struct fg_format *fmt)
 	h->format.type = h->fmtdesc[0].type;
 	h->format.fmt.pix.pixelformat = h->fmtdesc[0].pixelformat;
 	h->format.fmt.pix.field = V4L2_FIELD_ANY;
-	h->format.fmt.pix.width = fmt->width;
-	h->format.fmt.pix.height = fmt->height;
-	h->format.fmt.pix.bytesperline = fmt->width * fmt->bytes_per_pixel;
+	h->format.fmt.pix.width = width;
+	h->format.fmt.pix.height = height;
+	h->format.fmt.pix.bytesperline = width * 2;	/* FIXME */
 
 	if (ioctl(h->fd, VIDIOC_S_FMT, &h->format) < 0) {
 		perror("VIDIOC_S_FMT");

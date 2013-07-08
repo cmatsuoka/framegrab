@@ -25,9 +25,9 @@ int fg_stop(fg_handle handle)
 	return driver->stop(handle);
 }
 
-int fg_set_format(fg_handle handle, struct fg_format *fmt)
+int fg_set_format(fg_handle handle, int width, int height)
 {
-	return driver->set_format(handle, fmt);
+	return driver->set_format(handle, width, height);
 }
 
 int fg_get_frame(fg_handle handle, void *data)

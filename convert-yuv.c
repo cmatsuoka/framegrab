@@ -40,15 +40,15 @@ void yuyv2rgb(uint8 *out_buf, uint8 *in_buf, int width, int height)
 
 		yuv2rgb(y, u, v, &r, &g, &b);	/* 1st pixel */
 
-		*out_buffer++ = r;
-		*out_buffer++ = g;
-		*out_buffer++ = b;
+		*out_buf++ = r;
+		*out_buf++ = g;
+		*out_buf++ = b;
 
 		yuv2rgb(y2, u, v, &r, &g, &b);	/* 2nd pixel */
 
-		*out_buffer++ = r;
-		*out_buffer++ = g;
-		*out_buffer++ = b;
+		*out_buf++ = r;
+		*out_buf++ = g;
+		*out_buf++ = b;
 
 		yuv++;
 	}
