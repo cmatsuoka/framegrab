@@ -11,7 +11,7 @@
 #include "framegrab.h"
 #include "common.h"
 
-#define MAX_FORMATS 32
+#define MAX_FORMATS 8
 
 struct handle_data {
 	int fd;
