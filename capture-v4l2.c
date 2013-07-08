@@ -11,13 +11,17 @@
 #include "framegrab.h"
 #include "common.h"
 
+#define MAX_FORMATS 32
+
 struct handle_data {
 	int fd;
+	int num_formats;
 	struct v4l2_capability capability;
 	struct v4l2_cropcap cropcap;
 	struct v4l2_crop crop;
 	struct v4l2_format format;
 	struct v4l2_requestbuffers requestbuffers;
+	struct v4l2_fmtdesc fmtdesc[MAX_FORMATS];
 	struct buffer *buffers;
 };
 
@@ -26,6 +30,34 @@ struct buffer {
 	size_t length;
 };
 
+
+static int get_capabilities(struct handle_data *h)
+{
+	int i;
+
+	if (ioctl(h->fd, VIDIOC_QUERYCAP, &h->capability) < 0) {
+		perror("VIDIOC_QUERYCAP");
+		return -1;
+	}
+
+	if ((h->capability.capabilities & V4L2_CAP_VIDEO_CAPTURE) == 0) {
+		fprintf(stderr, "can't read/write from device\n");
+		return -1;
+	}
+
+	for (i = 0; i < MAX_FORMATS; i++) {
+		h->num_formats = i;
+		h->fmtdesc[i].index = i;
+		h->fmtdesc[i].type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+		if (ioctl(h->fd, VIDIOC_ENUM_FMT, &h->fmtdesc[i]) < 0)
+			break;
+
+		printf("format: %s\n", h->fmtdesc[i].description);
+	}
+
+	return 0;
+}
 
 static fg_handle init(char *dev)
 {
@@ -41,13 +73,7 @@ static fg_handle init(char *dev)
 		goto err1;
 	}
 
-	if (ioctl(h->fd, VIDIOC_QUERYCAP, &h->capability) < 0) {
-		perror("VIDIOC_QUERYCAP");
-		goto err2;
-	}
-
-	if ((h->capability.capabilities & V4L2_CAP_VIDEO_CAPTURE) == 0) {
-		fprintf(stderr, "can't read/write from device\n");
+	if (get_capabilities(h) < 0) {
 		goto err2;
 	}
 
@@ -62,9 +88,9 @@ static fg_handle init(char *dev)
 
 	/* set a default format */
         memset(&h->format, 0, sizeof (struct v4l2_format));
-        h->format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        h->format.type = h->fmtdesc[0].type;
         h->format.fmt.pix.field = V4L2_FIELD_ANY;
-        h->format.fmt.pix.pixelformat = V4L2_PIX_FMT_YUV422P;
+        h->format.fmt.pix.pixelformat = h->fmtdesc[0].pixelformat;
         h->format.fmt.pix.width = 640;
         h->format.fmt.pix.height = 480;
 
@@ -182,8 +208,8 @@ static int set_format(fg_handle handle, struct fg_format *fmt)
 	reqbufs.memory = V4L2_MEMORY_MMAP;
 	ioctl(h->fd, VIDIOC_REQBUFS, &reqbufs);
 
-	h->format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	h->format.fmt.pix.pixelformat = V4L2_PIX_FMT_YUV422P;
+	h->format.type = h->fmtdesc[0].type;
+	h->format.fmt.pix.pixelformat = h->fmtdesc[0].pixelformat;
 	h->format.fmt.pix.field = V4L2_FIELD_ANY;
 	h->format.fmt.pix.width = fmt->width;
 	h->format.fmt.pix.height = fmt->height;
