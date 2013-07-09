@@ -6,7 +6,7 @@
 #include "framegrab.h"
 #include "convert.h"
 
-int fg_write_jpeg(char *filename, int quality, struct fg_image *image)
+int fg_write_jpeg(char *filename, int quality, struct fg_image *image, void *raw)
 {
 	struct jpeg_compress_struct cinfo;
 	struct jpeg_error_mgr jerr;
@@ -22,10 +22,10 @@ int fg_write_jpeg(char *filename, int quality, struct fg_image *image)
 	/* Convert to RGB 24 */
 	switch (image->format) {
 	case FG_FORMAT_YUYV:
-		yuyv_to_rgb(data, image->data, image->width, image->height);
+		yuyv_to_rgb(data, raw, image->width, image->height);
 		break;
 	case FG_FORMAT_RGB24:
-		memcpy(data, image->data, image->width * image->height * 3);
+		memcpy(data, raw, image->width * image->height * 3);
 		break;
 	default:
 		return -1;

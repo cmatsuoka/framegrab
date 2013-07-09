@@ -205,6 +205,18 @@ static int set_format(fg_handle handle, struct fg_image *image)
 {
 	struct handle_data *h = (struct handle_data *)handle;
 	struct v4l2_requestbuffers reqbufs = { 0 };
+	int bytes_per_pixel;
+
+	switch (image->format) {
+	case FG_FORMAT_YUYV:
+		bytes_per_pixel = 2;
+		break;
+	case FG_FORMAT_RGB24:
+		bytes_per_pixel = 3;
+		break;
+	default:
+		return -1;
+	}
 
 	/* Can't change the format while buffers are allocated otherwise
 	 * we get -EBUSY from ioctl(VIDIOC_S_FMT). */
@@ -218,7 +230,7 @@ static int set_format(fg_handle handle, struct fg_image *image)
 	h->format.fmt.pix.field = V4L2_FIELD_ANY;
 	h->format.fmt.pix.width = image->width;
 	h->format.fmt.pix.height = image->height;
-	h->format.fmt.pix.bytesperline = image->width * image->bytes_per_pixel;
+	h->format.fmt.pix.bytesperline = image->width * bytes_per_pixel;
 
 	if (ioctl(h->fd, VIDIOC_S_FMT, &h->format) < 0) {
 		perror("VIDIOC_S_FMT");
@@ -228,13 +240,12 @@ static int set_format(fg_handle handle, struct fg_image *image)
 	return 0;
 }
 
-static int get_frame(fg_handle handle, struct fg_image *image)
+int get_frame(fg_handle handle, void *data, size_t len)
 {
 	struct handle_data *h = (struct handle_data *)handle;
 	struct v4l2_buffer buf = { 0 };
 	struct timeval tv = { 0 };
 	fd_set fds;
-	int length;
 
 	buf.type = h->fmtdesc.type;
 	buf.memory = V4L2_MEMORY_MMAP;
@@ -258,11 +269,10 @@ static int get_frame(fg_handle handle, struct fg_image *image)
 		return -1;
 	}
 
-	length = image->width * image->height * image->bytes_per_pixel;
-	if (length != h->buffers[0].length)
+	if (len != h->buffers[0].length)
 		return -1;
 
-	memcpy(image->data, h->buffers[0].start, h->buffers[0].length);
+	memcpy(data, h->buffers[0].start, h->buffers[0].length);
 
 	return 0;
 }

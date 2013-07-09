@@ -5,7 +5,7 @@ LD	= gcc
 LDFLAGS	=
 AR	= ar
 RANLIB	= ranlib
-OBJS	= framegrab.o capture.o capture-v4l2.o convert-yuv.o write-jpeg.o
+OBJS	= capture.o capture-v4l2.o convert-yuv.o write-jpeg.o
 STATIC	= libframegrab.a
 
 .c.o:

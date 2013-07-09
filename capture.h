@@ -9,7 +9,7 @@ struct fg_driver {
 	int (*start)(fg_handle);
 	int (*stop)(fg_handle);
 	int (*set_format)(fg_handle, struct fg_image *);
-	int (*get_frame)(fg_handle, struct fg_image *);
+	int (*get_frame)(fg_handle, void *, size_t);
 };
 
 #endif

@@ -1,6 +1,8 @@
 #ifndef FRAMEGRAB_H_
 #define FRAMEGRAB_H_
 
+#include <unistd.h>
+
 typedef void *fg_handle;
 
 /* fourcc constants */
@@ -11,8 +13,6 @@ struct fg_image {
 	int width;
 	int height;
 	int format;
-	int bytes_per_pixel;
-	unsigned char *data;
 };
 
 fg_handle fg_init(char *, int);
@@ -20,9 +20,7 @@ int fg_deinit(fg_handle);
 int fg_start(fg_handle);
 int fg_stop(fg_handle);
 int fg_set_format(fg_handle, struct fg_image *);
-int fg_get_frame(fg_handle, struct fg_image *);
-struct fg_image *fg_create_image(int, int, int);
-void fg_destroy_image(struct fg_image *);
-int fg_write_jpeg(char *, int, struct fg_image *);
+int fg_get_frame(fg_handle, void *, size_t len);
+int fg_write_jpeg(char *, int, struct fg_image *, void *);
 
 #endif
