@@ -1,7 +1,25 @@
 #ifndef FRAMEGRAB_H_
 #define FRAMEGRAB_H_
 
-#include <unistd.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <stdlib.h>
+
+#if defined(_WIN32) && !defined(__CYGWIN__)
+# ifdef BUILDING_DLL
+#  define EXPORT __declspec(dllexport)
+# else
+#  define EXPORT __declspec(dllimport)
+# endif
+#elif __GNUC__ >= 4 || defined(__HP_cc)
+# define EXPORT __attribute__((visibility ("default")))
+#elif defined(__SUNPRO_C)
+# define EXPORT __global
+#else
+# define EXPORT 
+#endif
 
 typedef void *fg_handle;
 
@@ -15,13 +33,17 @@ struct fg_image {
 	int format;
 };
 
-fg_handle fg_init(char *, int);
-int fg_deinit(fg_handle);
-int fg_start(fg_handle);
-int fg_stop(fg_handle);
-int fg_set_format(fg_handle, struct fg_image *);
-int fg_get_format(fg_handle, struct fg_image *);
-int fg_get_frame(fg_handle, void *, size_t len);
-int fg_write_jpeg(char *, int, struct fg_image *, void *);
+EXPORT fg_handle fg_init(char *, int);
+EXPORT int fg_deinit(fg_handle);
+EXPORT int fg_start(fg_handle);
+EXPORT int fg_stop(fg_handle);
+EXPORT int fg_set_format(fg_handle, struct fg_image *);
+EXPORT int fg_get_format(fg_handle, struct fg_image *);
+EXPORT int fg_get_frame(fg_handle, void *, size_t len);
+EXPORT int fg_write_jpeg(char *, int, struct fg_image *, void *);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
