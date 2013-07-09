@@ -3,7 +3,7 @@
 
 typedef unsigned char uint8;
 
-static void yuv2rgb(int y, int u, int v, uint8 *r, uint8 *g, uint8 *b)
+static inline void yuv2rgb(int y, int u, int v, uint8 *r, uint8 *g, uint8 *b)
 {
 	int r1, g1, b1;
 	int c = y - 16, d = u - 128, e = v - 128;
