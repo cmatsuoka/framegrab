@@ -32,7 +32,7 @@ struct buffer {
 static int get_capabilities(struct handle_data *h, int pixelformat)
 {
 	int i;
-	struct v4l2_fmtdesc desc;
+	struct v4l2_fmtdesc desc = { 0 };
 
 	if (ioctl(h->fd, VIDIOC_QUERYCAP, &h->capability) < 0) {
 		perror("VIDIOC_QUERYCAP");
@@ -51,7 +51,7 @@ static int get_capabilities(struct handle_data *h, int pixelformat)
 		if (ioctl(h->fd, VIDIOC_ENUM_FMT, &desc) < 0)
 			break;
 
-		printf("format: %s\n", h->fmtdesc.description);
+		printf("format: %s\n", desc.description);
 
 		if (desc.pixelformat == pixelformat) {
 			memcpy(&h->fmtdesc, &desc, sizeof(struct v4l2_fmtdesc));
@@ -66,8 +66,8 @@ static fg_handle init(char *dev, unsigned pixelformat)
 {
 	struct handle_data *h;
 
-	if ((h = malloc(sizeof(struct handle_data))) == NULL) {
-		perror("malloc");
+	if ((h = calloc(1, sizeof(struct handle_data))) == NULL) {
+		perror("calloc");
 		goto err;
 	}
 
@@ -80,7 +80,6 @@ static fg_handle init(char *dev, unsigned pixelformat)
 		goto err2;
 	}
 
-	memset(&h->cropcap, 0, sizeof (struct v4l2_cropcap));
 	h->cropcap.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
 	if (ioctl(h->fd, VIDIOC_CROPCAP, &h->cropcap) == 0) {
@@ -90,7 +89,6 @@ static fg_handle init(char *dev, unsigned pixelformat)
 	}
 
 	/* set a default format */
-        memset(&h->format, 0, sizeof (struct v4l2_format));
         h->format.type = h->fmtdesc.type;
         h->format.fmt.pix.field = V4L2_FIELD_ANY;
         h->format.fmt.pix.pixelformat = h->fmtdesc.pixelformat;
@@ -99,12 +97,6 @@ static fg_handle init(char *dev, unsigned pixelformat)
 
 	if (ioctl(h->fd, VIDIOC_S_FMT, &h->format) < 0) {
 		perror("VIDIOC_S_FMT");
-		goto err2;
-	}
-
-	h->buffers = calloc(h->requestbuffers.count, sizeof (struct buffer));
-	if (h->buffers == NULL) {
-		fprintf(stderr, "can't alloc buffers\n");
 		goto err2;
 	}
 
@@ -144,20 +136,25 @@ static int start_streaming(fg_handle handle)
 	h->requestbuffers.memory = V4L2_MEMORY_MMAP;
 	if (ioctl(h->fd, VIDIOC_REQBUFS, &h->requestbuffers) < 0) {
 		perror("VIDIOC_REQBUFS");
-		return -1;
+		goto err;
+	}
+
+	h->buffers = calloc(h->requestbuffers.count, sizeof (struct buffer));
+	if (h->buffers == NULL) {
+		fprintf(stderr, "can't alloc buffers\n");
+		goto err;
 	}
 
 	for (i = 0; i < h->requestbuffers.count; i++) {
-		struct v4l2_buffer buf;
+		struct v4l2_buffer buf = { 0 };
 
-		memset(&buf, 0, sizeof (struct v4l2_buffer));
 		buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 		buf.memory = V4L2_MEMORY_MMAP;
 		buf.index = i;
 
 		if (ioctl(h->fd, VIDIOC_QUERYBUF, &buf) < 0) {
 			perror("VIDIOC_QUERYBUF");
-			return -1;
+			goto err2;
 		}
 
 		h->buffers[i].length = buf.length;
@@ -166,17 +163,22 @@ static int start_streaming(fg_handle handle)
 					   buf.m.offset);
 		if (h->buffers[i].start == MAP_FAILED) {
 			perror("mmap");
-			return -1;
+			goto err2;
 		}
 	}
 
 	buf_type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	if (ioctl(h->fd, VIDIOC_STREAMON, &buf_type) < 0) {
 		perror("VIDIOC_STREAMON");
-		return -1;
+		goto err2;
 	}
 
 	return 0;
+
+      err2:
+	free(h->buffers);
+      err:
+	return -1;
 }
 
 static int stop_streaming(fg_handle handle)
@@ -202,7 +204,7 @@ static int stop_streaming(fg_handle handle)
 static int set_format(fg_handle handle, struct fg_image *image)
 {
 	struct handle_data *h = (struct handle_data *)handle;
-	struct v4l2_requestbuffers reqbufs;
+	struct v4l2_requestbuffers reqbufs = { 0 };
 
 	/* Can't change the format while buffers are allocated otherwise
 	 * we get -EBUSY from ioctl(VIDIOC_S_FMT). */

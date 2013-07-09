@@ -58,5 +58,7 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+	fg_destroy_image(image);
+
 	exit(EXIT_SUCCESS);
 }

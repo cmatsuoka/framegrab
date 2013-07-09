@@ -62,8 +62,8 @@ int fg_write_jpeg(char *filename, int quality, struct fg_image *image)
 
 	jpeg_finish_compress(&cinfo);
 	fclose(f);
-
 	jpeg_destroy_compress(&cinfo);
+	free(data);
 
 	return 0;
 
