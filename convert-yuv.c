@@ -21,22 +21,20 @@ static void yuv2rgb(int y, int u, int v, uint8 *r, uint8 *g, uint8 *b)
 	*b = b1;
 }
 
-void yuyv2rgb(uint8 *out_buf, uint8 *in_buf, int width, int height)
+void yuyv_to_rgb(uint8 *out_buf, uint8 *in_buf, int width, int height)
 {
 	int i, size;
-	unsigned int *yuv;
 
-	yuv = (unsigned int *)in_buf;
 	size = width * height / 2;
 
 	for (i = 0; i < size; i++) {
 		int y, u, v, y2;
 		uint8 r, g, b;
 
-		v  = ((*yuv & 0x000000ff));
-		y  = ((*yuv & 0x0000ff00) >> 8);
-		u  = ((*yuv & 0x00ff0000) >> 16);
-		y2 = ((*yuv & 0xff000000) >> 24);
+		y  = in_buf[0];
+		u  = in_buf[1];
+		y2 = in_buf[2];
+		v  = in_buf[3];
 
 		yuv2rgb(y, u, v, &r, &g, &b);	/* 1st pixel */
 
@@ -50,6 +48,6 @@ void yuyv2rgb(uint8 *out_buf, uint8 *in_buf, int width, int height)
 		*out_buf++ = g;
 		*out_buf++ = b;
 
-		yuv++;
+		in_buf += 4;
 	}
 }

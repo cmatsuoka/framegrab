@@ -6,6 +6,6 @@
 	else if ((x) > (z)) (x) = (z); \
 } while (0)
 
-void yuyv2rgb(unsigned char *, unsigned char *, int, int);
+void yuyv_to_rgb(unsigned char *, unsigned char *, int, int);
 
 #endif

@@ -22,7 +22,7 @@ int fg_write_jpeg(char *filename, int quality, struct fg_image *image)
 	/* Convert to RGB 24 */
 	switch (image->format) {
 	case FG_FORMAT_YUYV:
-		yuyv2rgb(data, image->data, image->width, image->height);
+		yuyv_to_rgb(data, image->data, image->width, image->height);
 		break;
 	case FG_FORMAT_RGB24:
 		memcpy(data, image->data, image->width * image->height * 3);
@@ -46,6 +46,7 @@ int fg_write_jpeg(char *filename, int quality, struct fg_image *image)
 	cinfo.image_width = image->width;
 	cinfo.image_height = image->height;
 	cinfo.input_components = 3;	/* # of color components per pixel */
+	cinfo.in_color_space = JCS_RGB;
 
 	jpeg_set_defaults(&cinfo);
 	jpeg_set_quality(&cinfo, quality, TRUE);
