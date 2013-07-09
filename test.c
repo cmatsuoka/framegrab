@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	len = image.width * image.height * 2;
+	len = fg_get_image_size(&image);
 	if ((data = malloc(len)) == NULL) {
 		perror("malloc");
 		exit(EXIT_FAILURE);

@@ -40,6 +40,7 @@ EXPORT int fg_stop(fg_handle);
 EXPORT int fg_set_format(fg_handle, struct fg_image *);
 EXPORT int fg_get_format(fg_handle, struct fg_image *);
 EXPORT int fg_get_frame(fg_handle, void *, size_t len);
+EXPORT int fg_get_image_size(struct fg_image *);
 EXPORT int fg_write_jpeg(char *, int, struct fg_image *, void *);
 
 #ifdef __cplusplus

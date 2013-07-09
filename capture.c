@@ -39,3 +39,21 @@ int fg_get_frame(fg_handle handle, void *data, size_t len)
 {
 	return driver->get_frame(handle, data, len);
 }
+
+int fg_get_image_size(struct fg_image *image)
+{
+	int bytes_per_pixel;
+
+	switch (image->format) {
+	case FG_FORMAT_YUYV:
+		bytes_per_pixel = 2;
+		break;
+	case FG_FORMAT_RGB24:
+		bytes_per_pixel = 3;
+		break;
+	default:
+		return -1;
+	}
+
+	return image->width * image->height * bytes_per_pixel;
+}
