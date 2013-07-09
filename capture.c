@@ -40,6 +40,11 @@ int fg_get_frame(fg_handle handle, void *data, size_t len)
 	return driver->get_frame(handle, data, len);
 }
 
+int fg_get_device_info(fg_handle handle, struct fg_device *info)
+{
+	return driver->get_device_info(handle, info);
+}
+
 int fg_get_image_size(struct fg_image *image)
 {
 	int bytes_per_pixel;

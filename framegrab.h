@@ -27,6 +27,13 @@ typedef void *fg_handle;
 #define FG_FORMAT_YUYV	0x56595559
 #define FG_FORMAT_RGB24	0x33424752
 
+struct fg_device {
+	char driver[16];
+	char card[32];
+	char bus_info[32];
+	unsigned int version;
+};
+
 struct fg_image {
 	int width;
 	int height;
@@ -40,6 +47,7 @@ EXPORT int fg_stop(fg_handle);
 EXPORT int fg_set_format(fg_handle, struct fg_image *);
 EXPORT int fg_get_format(fg_handle, struct fg_image *);
 EXPORT int fg_get_frame(fg_handle, void *, size_t len);
+EXPORT int fg_get_device_info(fg_handle, struct fg_device *);
 EXPORT int fg_get_image_size(struct fg_image *);
 EXPORT int fg_write_jpeg(char *, int, struct fg_image *, void *);
 

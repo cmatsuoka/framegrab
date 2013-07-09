@@ -1,3 +1,26 @@
+/*
+ * Copyright (C) 2013 Claudio Matsuoka
+ * Copyright (C) 2013 CITS - Centro Internacional de Tecnologia de Software
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -51,7 +74,7 @@ static int get_capabilities(struct handle_data *h, int pixelformat)
 		if (ioctl(h->fd, VIDIOC_ENUM_FMT, &desc) < 0)
 			break;
 
-		printf("format: %s\n", desc.description);
+		/* printf("format: %s\n", desc.description); */
 
 		if (desc.pixelformat == pixelformat) {
 			memcpy(&h->fmtdesc, &desc, sizeof(struct v4l2_fmtdesc));
@@ -296,6 +319,19 @@ int get_frame(fg_handle handle, void *data, size_t len)
 	return 0;
 }
 
+int get_device_info(fg_handle handle, struct fg_device *info)
+{
+	struct handle_data *h = (struct handle_data *)handle;
+
+	memset(info, 0, sizeof (struct fg_device));
+	strncpy(info->driver, (char *)h->capability.driver, 16);
+	strncpy(info->card, (char *)h->capability.card, 32);
+	strncpy(info->bus_info, (char *)h->capability.bus_info, 32);
+	info->version = h->capability.version;
+
+	return 0;
+}
+
 struct fg_driver v4l2_driver = {
 	init,
 	deinit,
@@ -303,5 +339,6 @@ struct fg_driver v4l2_driver = {
 	stop_streaming,
 	set_format,
 	get_format,
-	get_frame
+	get_frame,
+	get_device_info
 };

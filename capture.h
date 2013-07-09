@@ -11,6 +11,7 @@ struct fg_driver {
 	int (*set_format)(fg_handle, struct fg_image *);
 	int (*get_format)(fg_handle, struct fg_image *);
 	int (*get_frame)(fg_handle, void *, size_t);
+	int (*get_device_info)(fg_handle, struct fg_device *);
 };
 
 #endif

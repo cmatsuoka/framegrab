@@ -6,6 +6,7 @@ int main(int argc, char **argv)
 {
 	fg_handle h;
 	struct fg_image image;
+	struct fg_device device;
 	unsigned char *data;
 	int len;
 
@@ -19,6 +20,12 @@ int main(int argc, char **argv)
 		perror("fg_init");
 		exit(EXIT_FAILURE);
 	}
+
+	fg_get_device_info(h, &device);
+	printf("driver: %s\n", device.driver);
+	printf("card: %s\n", device.card);
+	printf("bus info: %s\n", device.bus_info);
+	printf("version: %#08x\n", device.version);
 
 	image.width = 640;
 	image.height = 480;
