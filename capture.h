@@ -4,7 +4,7 @@
 #include "framegrab.h"
 
 struct fg_driver {
-	fg_handle (*init)(char *);
+	fg_handle (*init)(char *, unsigned);
 	int (*deinit)(fg_handle);
 	int (*start)(fg_handle);
 	int (*stop)(fg_handle);

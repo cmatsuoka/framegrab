@@ -7,7 +7,7 @@ static struct fg_driver *driver = &v4l2_driver;
 
 fg_handle fg_init(char *dev)
 {
-	return driver->init(dev);
+	return driver->init(dev, FG_FORMAT_YUYV);
 }
 
 int fg_deinit(fg_handle handle)

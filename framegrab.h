@@ -3,8 +3,9 @@
 
 typedef void *fg_handle;
 
-#define FG_FORMAT_YUYV	0
-#define FG_FORMAT_RGB24	1
+/* fourcc constants */
+#define FG_FORMAT_YUYV	0x56595559
+#define FG_FORMAT_RGB24	0x33424752
 
 struct fg_image {
 	int width;

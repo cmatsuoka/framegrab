@@ -12,17 +12,14 @@
 #include "framegrab.h"
 #include "capture.h"
 
-#define MAX_FORMATS 8
-
 struct handle_data {
 	int fd;
-	int num_formats;
 	struct v4l2_capability capability;
 	struct v4l2_cropcap cropcap;
 	struct v4l2_crop crop;
 	struct v4l2_format format;
 	struct v4l2_requestbuffers requestbuffers;
-	struct v4l2_fmtdesc fmtdesc[MAX_FORMATS];
+	struct v4l2_fmtdesc fmtdesc;
 	struct buffer *buffers;
 };
 
@@ -32,9 +29,10 @@ struct buffer {
 };
 
 
-static int get_capabilities(struct handle_data *h)
+static int get_capabilities(struct handle_data *h, int pixelformat)
 {
 	int i;
+	struct v4l2_fmtdesc desc;
 
 	if (ioctl(h->fd, VIDIOC_QUERYCAP, &h->capability) < 0) {
 		perror("VIDIOC_QUERYCAP");
@@ -46,21 +44,25 @@ static int get_capabilities(struct handle_data *h)
 		return -1;
 	}
 
-	for (i = 0; i < MAX_FORMATS; i++) {
-		h->num_formats = i;
-		h->fmtdesc[i].index = i;
-		h->fmtdesc[i].type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	for (i = 0; i < 32; i++) {
+		desc.index = i;
+		desc.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
-		if (ioctl(h->fd, VIDIOC_ENUM_FMT, &h->fmtdesc[i]) < 0)
+		if (ioctl(h->fd, VIDIOC_ENUM_FMT, &desc) < 0)
 			break;
 
-		printf("format: %s\n", h->fmtdesc[i].description);
+		printf("format: %s\n", h->fmtdesc.description);
+
+		if (desc.pixelformat == pixelformat) {
+			memcpy(&h->fmtdesc, &desc, sizeof(struct v4l2_fmtdesc));
+			return 0;
+		}
 	}
 
-	return 0;
+	return -1;
 }
 
-static fg_handle init(char *dev)
+static fg_handle init(char *dev, unsigned pixelformat)
 {
 	struct handle_data *h;
 
@@ -74,7 +76,7 @@ static fg_handle init(char *dev)
 		goto err1;
 	}
 
-	if (get_capabilities(h) < 0) {
+	if (get_capabilities(h, pixelformat) < 0) {
 		goto err2;
 	}
 
@@ -89,9 +91,9 @@ static fg_handle init(char *dev)
 
 	/* set a default format */
         memset(&h->format, 0, sizeof (struct v4l2_format));
-        h->format.type = h->fmtdesc[0].type;
+        h->format.type = h->fmtdesc.type;
         h->format.fmt.pix.field = V4L2_FIELD_ANY;
-        h->format.fmt.pix.pixelformat = h->fmtdesc[0].pixelformat;
+        h->format.fmt.pix.pixelformat = h->fmtdesc.pixelformat;
         h->format.fmt.pix.width = 640;
         h->format.fmt.pix.height = 480;
 
@@ -209,8 +211,8 @@ static int set_format(fg_handle handle, struct fg_image *image)
 	reqbufs.memory = V4L2_MEMORY_MMAP;
 	ioctl(h->fd, VIDIOC_REQBUFS, &reqbufs);
 
-	h->format.type = h->fmtdesc[0].type;
-	h->format.fmt.pix.pixelformat = h->fmtdesc[0].pixelformat;
+	h->format.type = h->fmtdesc.type;
+	h->format.fmt.pix.pixelformat = h->fmtdesc.pixelformat;
 	h->format.fmt.pix.field = V4L2_FIELD_ANY;
 	h->format.fmt.pix.width = image->width;
 	h->format.fmt.pix.height = image->height;
@@ -232,7 +234,7 @@ static int get_frame(fg_handle handle, struct fg_image *image)
 	fd_set fds;
 	int length;
 
-	buf.type = h->fmtdesc[0].type;
+	buf.type = h->fmtdesc.type;
 	buf.memory = V4L2_MEMORY_MMAP;
 	buf.index = 0;
 	if (ioctl(h->fd, VIDIOC_QBUF, &buf) < 0) {
