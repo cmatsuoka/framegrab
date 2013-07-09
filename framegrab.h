@@ -15,7 +15,7 @@ struct fg_image {
 	unsigned char *data;
 };
 
-fg_handle fg_init(char *);
+fg_handle fg_init(char *, int);
 int fg_deinit(fg_handle);
 int fg_start(fg_handle);
 int fg_stop(fg_handle);

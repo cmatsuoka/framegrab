@@ -13,7 +13,7 @@ int main(int argc, char **argv)
 	}
 
 	printf("initialize\n");
-	if ((h = fg_init(argv[1])) == NULL) {
+	if ((h = fg_init(argv[1], FG_FORMAT_YUYV)) == NULL) {
 		perror("fg_init");
 		exit(EXIT_FAILURE);
 	}

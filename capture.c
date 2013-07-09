@@ -5,9 +5,9 @@ extern struct fg_driver v4l2_driver;
 
 static struct fg_driver *driver = &v4l2_driver;
 
-fg_handle fg_init(char *dev)
+fg_handle fg_init(char *dev, int format)
 {
-	return driver->init(dev, FG_FORMAT_YUYV);
+	return driver->init(dev, format);
 }
 
 int fg_deinit(fg_handle handle)
