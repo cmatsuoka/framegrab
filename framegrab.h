@@ -20,6 +20,7 @@ int fg_deinit(fg_handle);
 int fg_start(fg_handle);
 int fg_stop(fg_handle);
 int fg_set_format(fg_handle, struct fg_image *);
+int fg_get_format(fg_handle, struct fg_image *);
 int fg_get_frame(fg_handle, void *, size_t len);
 int fg_write_jpeg(char *, int, struct fg_image *, void *);
 

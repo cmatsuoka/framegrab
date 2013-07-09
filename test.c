@@ -30,6 +30,13 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+	printf("get format: ");
+	if (fg_get_format(h, &image) < 0) {
+		perror("fg_get_format");
+		exit(EXIT_FAILURE);
+	}
+	printf("%dx%d\n", image.width, image.height);
+
 	printf("start capture\n");
 	if (fg_start(h) < 0) {
 		perror("fg_start");

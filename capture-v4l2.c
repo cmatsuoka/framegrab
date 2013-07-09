@@ -201,6 +201,25 @@ static int stop_streaming(fg_handle handle)
 	return 0;
 }
 
+static int get_format(fg_handle handle, struct fg_image *image)
+{
+	struct handle_data *h = (struct handle_data *)handle;
+	struct v4l2_format format = { 0 };
+
+	format.type = h->fmtdesc.type;
+
+	if (ioctl(h->fd, VIDIOC_G_FMT, &format) < 0) {
+		perror("VIDIOC_G_FMT");
+		return -1;
+	}
+
+	image->width = format.fmt.pix.width;
+	image->height = format.fmt.pix.height;
+	image->format = format.fmt.pix.pixelformat;
+
+	return 0;
+}
+
 static int set_format(fg_handle handle, struct fg_image *image)
 {
 	struct handle_data *h = (struct handle_data *)handle;
@@ -283,5 +302,6 @@ struct fg_driver v4l2_driver = {
 	start_streaming,
 	stop_streaming,
 	set_format,
+	get_format,
 	get_frame
 };
