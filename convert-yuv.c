@@ -51,3 +51,32 @@ void yuyv_to_rgb(uint8 *out_buf, uint8 *in_buf, int width, int height)
 		in_buf += 4;
 	}
 }
+
+void yuyv_to_gray(uint8 *out_buf, uint8 *in_buf, int width, int height)
+{
+	int i, size;
+
+	size = width * height / 2;
+
+	for (i = 0; i < size; i++) {
+		int y, u, v, y2;
+		uint8 r, g, b;
+
+		y  = in_buf[0];
+		u  = in_buf[1];
+		y2 = in_buf[2];
+		v  = in_buf[3];
+
+		yuv2rgb(y, u, v, &r, &g, &b);	/* 1st pixel */
+
+		*out_buf++ = (76 * r + 150 * g + 29 * b) >> 8;
+
+		yuv2rgb(y2, u, v, &r, &g, &b);	/* 2nd pixel */
+
+		*out_buf++ = (76 * r + 150 * g + 29 * b) >> 8;
+
+		in_buf += 4;
+	}
+}
+
+

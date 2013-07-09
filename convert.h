@@ -7,5 +7,6 @@
 } while (0)
 
 void yuyv_to_rgb(unsigned char *, unsigned char *, int, int);
+void yuyv_to_gray(unsigned char *, unsigned char *, int, int);
 
 #endif

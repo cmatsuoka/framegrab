@@ -50,6 +50,7 @@ EXPORT int fg_get_frame(fg_handle, void *, size_t len);
 EXPORT int fg_get_device_info(fg_handle, struct fg_device *);
 EXPORT int fg_get_image_size(struct fg_image *);
 EXPORT int fg_write_jpeg(char *, int, struct fg_image *, void *);
+EXPORT int fg_write_jpeg_grayscale(char *, int, struct fg_image *, void *);
 
 #ifdef __cplusplus
 }

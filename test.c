@@ -62,7 +62,11 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	if (fg_write_jpeg("teste.jpg", 80, &image, data) < 0) {
+	if (fg_write_jpeg("test-color.jpg", 80, &image, data) < 0) {
+		perror("fg_write_jpeg");
+		exit(EXIT_FAILURE);
+	}
+	if (fg_write_jpeg_grayscale("test-grayscale.jpg", 80, &image, data) < 0) {
 		perror("fg_write_jpeg");
 		exit(EXIT_FAILURE);
 	}
