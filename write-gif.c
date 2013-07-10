@@ -41,13 +41,13 @@ static void decode_planes(unsigned char *r, unsigned char *g, unsigned char *b,
 	}
 }
 
-int fg_write_gif(char *filename, int quality, struct fg_image *image, void *raw)
+int fg_write_gif(char *filename, struct fg_image *image, void *raw)
 {
 	GifFileType *file;
 	ColorMapObject* cmap;
 	unsigned char *data, *r, *g, *b, *qdata, *q;
 	FILE *f;
-	int i, len, colors = 256;
+	int error, i, len, colors = 256;
 
 	len = image->width * image->height;
 
@@ -72,10 +72,10 @@ int fg_write_gif(char *filename, int quality, struct fg_image *image, void *raw)
 	decode_planes(r, g, b, data, len);
 
 	/* quantize colors */
-	if ((cmap = MakeMapObject(colors, NULL)) == NULL)
+	if ((cmap = GifMakeMapObject(colors, NULL)) == NULL)
 		goto err5;
 
-	if (QuantizeBuffer(image->width, image->height, &colors, r, g, b,
+	if (GifQuantizeBuffer(image->width, image->height, &colors, r, g, b,
 					qdata, cmap->Colors) == GIF_ERROR) {
 		fprintf(stderr, "quantization error\n");
 		goto err6;
@@ -86,7 +86,7 @@ int fg_write_gif(char *filename, int quality, struct fg_image *image, void *raw)
 		goto err6;
 	}
 
-	if ((file = EGifOpen(f, write_data)) == NULL) {
+	if ((file = EGifOpen(f, write_data, &error)) == NULL) {
 		perror("EGifOpen");
 		goto err7;
 	}
