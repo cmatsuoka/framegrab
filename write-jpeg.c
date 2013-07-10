@@ -1,3 +1,26 @@
+/*
+ * Copyright (C) 2013 Claudio Matsuoka
+ * Copyright (C) 2013 CITS - Centro Internacional de Tecnologia de Software
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include <stdio.h>
 #include <jpeglib.h>
 #include <setjmp.h>
@@ -62,31 +85,3 @@ int fg_write_jpeg(char *filename, int quality, struct fg_image *image, void *raw
       err:
 	return -1;
 }
-
-/*
- * SOME FINE POINTS:
- *
- * In the above loop, we ignored the return value of jpeg_write_scanlines,
- * which is the number of scanlines actually written.  We could get away
- * with this because we were only relying on the value of cinfo.next_scanline,
- * which will be incremented correctly.  If you maintain additional loop
- * variables then you should be careful to increment them properly.
- * Actually, for output to a stdio stream you needn't worry, because
- * then jpeg_write_scanlines will write all the lines passed (or else exit
- * with a fatal error).  Partial writes can only occur if you use a data
- * destination module that can demand suspension of the compressor.
- * (If you don't know what that's for, you don't need it.)
- *
- * If the compressor requires full-image buffers (for entropy-coding
- * optimization or a multi-scan JPEG file), it will create temporary
- * files for anything that doesn't fit within the maximum-memory setting.
- * (Note that temp files are NOT needed if you use the default parameters.)
- * On some systems you may need to set up a signal handler to ensure that
- * temporary files are deleted if the program is interrupted.  See libjpeg.txt.
- *
- * Scanlines MUST be supplied in top-to-bottom order if you want your JPEG
- * files to be compatible with everyone else's.  If you cannot readily read
- * your data in that order, you'll need an intermediate array to hold the
- * image.  See rdtarga.c or rdbmp.c for examples of handling bottom-to-top
- * source data using the JPEG code's internal virtual-array mechanisms.
- */
