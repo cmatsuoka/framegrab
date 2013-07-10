@@ -51,6 +51,8 @@ EXPORT int fg_get_device_info(fg_handle, struct fg_device *);
 EXPORT int fg_get_image_size(struct fg_image *);
 EXPORT int fg_write_jpeg(char *, int, struct fg_image *, void *);
 EXPORT int fg_write_jpeg_grayscale(char *, int, struct fg_image *, void *);
+EXPORT int fg_convert_rgb(void *, void *, struct fg_image *);
+EXPORT int fg_convert_grayscale(void *, void *, struct fg_image *);
 
 #ifdef __cplusplus
 }

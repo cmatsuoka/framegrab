@@ -52,7 +52,7 @@ void yuyv_to_rgb(uint8 *out_buf, uint8 *in_buf, int width, int height)
 	}
 }
 
-void yuyv_to_gray(uint8 *out_buf, uint8 *in_buf, int width, int height)
+void yuyv_to_grayscale(uint8 *out_buf, uint8 *in_buf, int width, int height)
 {
 	int i, size;
 

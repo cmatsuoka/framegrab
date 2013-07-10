@@ -19,16 +19,8 @@ int fg_write_jpeg_grayscale(char *filename, int quality, struct fg_image *image,
 	if (data == NULL)
 		goto err;
 
-	/* Convert to RGB 24 */
-	switch (image->format) {
-	case FG_FORMAT_YUYV:
-		yuyv_to_gray(data, raw, image->width, image->height);
-		break;
-	case FG_FORMAT_RGB24:
-		return -1;
-	default:
-		return -1;
-	};
+	if (fg_convert_grayscale(data, raw, image) < 0)
+		goto err1;
 
 	/* Allocate and initialize JPEG compression object */
 	cinfo.err = jpeg_std_error(&jerr);

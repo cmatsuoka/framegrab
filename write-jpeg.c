@@ -19,18 +19,8 @@ int fg_write_jpeg(char *filename, int quality, struct fg_image *image, void *raw
 	if (data == NULL)
 		goto err;
 
-	/* Convert to RGB 24 */
-	switch (image->format) {
-	case FG_FORMAT_YUYV:
-		yuyv_to_rgb(data, raw, image->width, image->height);
-		break;
-	case FG_FORMAT_RGB24:
-		memcpy(data, raw, image->width * image->height * 3);
-		break;
-	default:
-		return -1;
-	};
-
+	if (fg_convert_rgb(data, raw, image) < 0)
+		goto err1;
 
 	/* Allocate and initialize JPEG compression object */
 	cinfo.err = jpeg_std_error(&jerr);
