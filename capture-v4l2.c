@@ -288,31 +288,35 @@ int get_frame(fg_handle handle, void *data, size_t len)
 	struct v4l2_buffer buf = { 0 };
 	struct timeval tv = { 0 };
 	fd_set fds;
+	int i;
 
-	buf.type = h->fmtdesc.type;
-	buf.memory = V4L2_MEMORY_MMAP;
-	buf.index = 0;
-	if (ioctl(h->fd, VIDIOC_QBUF, &buf) < 0) {
-		perror("VIDIOC_QBUF");
-		return -1;
+	/* Get a few frames to warm up (otherwise some cameras fail) */
+	for (i = 0; i < 4; i++) {
+		buf.type = h->fmtdesc.type;
+		buf.memory = V4L2_MEMORY_MMAP;
+		buf.index = 0;
+		if (ioctl(h->fd, VIDIOC_QBUF, &buf) < 0) {
+			perror("VIDIOC_QBUF");
+			return -1;
+		}
+	
+		FD_ZERO(&fds);
+		FD_SET(h->fd, &fds);
+	
+		tv.tv_sec = 2;
+		if (select(h->fd + 1, &fds, NULL, NULL, &tv) < 0) {
+			perror("select");
+			return -1;
+		}
+	
+		if (ioctl(h->fd, VIDIOC_DQBUF, &buf) < 0) {
+			perror("VIDIOC_DQBUF");
+			return -1;
+		}
+	
+		if (len != h->buffers[0].length)
+			return -1;
 	}
-
-	FD_ZERO(&fds);
-	FD_SET(h->fd, &fds);
-
-	tv.tv_sec = 2;
-	if (select(h->fd + 1, &fds, NULL, NULL, &tv) < 0) {
-		perror("select");
-		return -1;
-	}
-
-	if (ioctl(h->fd, VIDIOC_DQBUF, &buf) < 0) {
-		perror("VIDIOC_DQBUF");
-		return -1;
-	}
-
-	if (len != h->buffers[0].length)
-		return -1;
 
 	memcpy(data, h->buffers[0].start, h->buffers[0].length);
 
