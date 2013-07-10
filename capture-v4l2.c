@@ -52,7 +52,7 @@ struct buffer {
 };
 
 
-static int get_capabilities(struct handle_data *h, int pixelformat)
+static int get_capabilities(struct handle_data *h, unsigned pixelformat)
 {
 	int i;
 	struct v4l2_fmtdesc desc;
@@ -154,7 +154,7 @@ static int start_streaming(fg_handle handle)
 {
 	struct handle_data *h = (struct handle_data *)handle;
 	enum v4l2_buf_type buf_type;
-	int i;
+	unsigned i;
 
 	h->requestbuffers.count = 1;
 	h->requestbuffers.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -211,7 +211,7 @@ static int stop_streaming(fg_handle handle)
 {
 	struct handle_data *h = (struct handle_data *)handle;
 	enum v4l2_buf_type buf_type;
-	int i;
+	unsigned i;
 
 	buf_type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	if (ioctl(h->fd, VIDIOC_STREAMOFF, &buf_type) < 0) {
