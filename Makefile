@@ -6,7 +6,7 @@ LDFLAGS	=
 AR	= ar
 RANLIB	= ranlib
 OBJS	= capture.o capture-v4l2.o convert.o convert-yuv.o write-jpeg.o \
-	  write-jpeg-grayscale.o
+	  write-jpeg-grayscale.o write-gif.o
 STATIC	= libframegrab.a
 
 .c.o:
@@ -22,4 +22,4 @@ clean:
 	rm -f core *~ *.o *.a
 
 test: $(STATIC) test.o
-	$(LD) -o $@ $(LDFLAGS) test.o $(STATIC) -ljpeg
+	$(LD) -o $@ $(LDFLAGS) test.o $(STATIC) -ljpeg -lgif

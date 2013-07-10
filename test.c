@@ -70,6 +70,10 @@ int main(int argc, char **argv)
 		perror("fg_write_jpeg");
 		exit(EXIT_FAILURE);
 	}
+	if (fg_write_gif("test-color.gif", 80, &image, data) < 0) {
+		perror("fg_write_jpeg");
+		exit(EXIT_FAILURE);
+	}
 	free(data);
 
 	printf("stop capture\n");
