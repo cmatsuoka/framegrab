@@ -55,7 +55,9 @@ struct buffer {
 static int get_capabilities(struct handle_data *h, int pixelformat)
 {
 	int i;
-	struct v4l2_fmtdesc desc = { 0 };
+	struct v4l2_fmtdesc desc;
+
+	memset(&desc, 0, sizeof(struct v4l2_fmtdesc));
 
 	if (ioctl(h->fd, VIDIOC_QUERYCAP, &h->capability) < 0) {
 		perror("VIDIOC_QUERYCAP");
@@ -169,8 +171,9 @@ static int start_streaming(fg_handle handle)
 	}
 
 	for (i = 0; i < h->requestbuffers.count; i++) {
-		struct v4l2_buffer buf = { 0 };
+		struct v4l2_buffer buf;
 
+		memset(&buf, 0, sizeof (struct v4l2_buffer));
 		buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 		buf.memory = V4L2_MEMORY_MMAP;
 		buf.index = i;
@@ -227,8 +230,9 @@ static int stop_streaming(fg_handle handle)
 static int get_format(fg_handle handle, struct fg_image *image)
 {
 	struct handle_data *h = (struct handle_data *)handle;
-	struct v4l2_format format = { 0 };
+	struct v4l2_format format;
 
+	memset(&format, 0, sizeof (struct v4l2_format));
 	format.type = h->fmtdesc.type;
 
 	if (ioctl(h->fd, VIDIOC_G_FMT, &format) < 0) {
@@ -246,7 +250,7 @@ static int get_format(fg_handle handle, struct fg_image *image)
 static int set_format(fg_handle handle, struct fg_image *image)
 {
 	struct handle_data *h = (struct handle_data *)handle;
-	struct v4l2_requestbuffers reqbufs = { 0 };
+	struct v4l2_requestbuffers reqbufs;
 	int bytes_per_pixel;
 
 	switch (image->format) {
@@ -262,6 +266,7 @@ static int set_format(fg_handle handle, struct fg_image *image)
 
 	/* Can't change the format while buffers are allocated otherwise
 	 * we get -EBUSY from ioctl(VIDIOC_S_FMT). */
+	memset(&reqbufs, 0, sizeof (struct v4l2_requestbuffers));
 	reqbufs.count = 0;
 	reqbufs.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	reqbufs.memory = V4L2_MEMORY_MMAP;
@@ -285,13 +290,14 @@ static int set_format(fg_handle handle, struct fg_image *image)
 int get_frame(fg_handle handle, void *data, size_t len)
 {
 	struct handle_data *h = (struct handle_data *)handle;
-	struct v4l2_buffer buf = { 0 };
-	struct timeval tv = { 0 };
+	struct v4l2_buffer buf;
+	struct timeval tv;
 	fd_set fds;
 	int i;
 
 	/* Get a few frames to warm up (otherwise some cameras fail) */
 	for (i = 0; i < 4; i++) {
+		memset(&buf, 0, sizeof (struct v4l2_buffer));
 		buf.type = h->fmtdesc.type;
 		buf.memory = V4L2_MEMORY_MMAP;
 		buf.index = 0;
@@ -303,7 +309,8 @@ int get_frame(fg_handle handle, void *data, size_t len)
 		FD_ZERO(&fds);
 		FD_SET(h->fd, &fds);
 	
-		tv.tv_sec = 2;
+		tv.tv_sec = 3;
+		tv.tv_usec = 0;
 		if (select(h->fd + 1, &fds, NULL, NULL, &tv) < 0) {
 			perror("select");
 			return -1;
