@@ -26,6 +26,14 @@
 #include "framegrab.h"
 #include "convert.h"
 
+#if 1
+#define GifMakeMapObject MakeMapObject
+#define GifQuantizeBuffer QuantizeBuffer
+#define EGifOpen_(x,y,z) EGifOpen(x,y)
+#else
+#define EGifOpen_(x,y,z) EGifOpen(x,y,z)
+#endif
+
 static int write_data(GifFileType* file, const GifByteType* data, int len)
 {
 	return fwrite(data, 1, len, (FILE *)file->UserData);
@@ -41,7 +49,7 @@ static void decode_planes(unsigned char *r, unsigned char *g, unsigned char *b,
 	}
 }
 
-int fg_write_gif(char *filename, struct fg_image *image, void *raw)
+int fg_write_gif(char *filename, struct fg_image *image, void *raw, int flags)
 {
 	GifFileType *file;
 	ColorMapObject* cmap;
@@ -86,7 +94,7 @@ int fg_write_gif(char *filename, struct fg_image *image, void *raw)
 		goto err6;
 	}
 
-	if ((file = EGifOpen(f, write_data, &error)) == NULL) {
+	if ((file = EGifOpen_(f, write_data, &error)) == NULL) {
 		perror("EGifOpen");
 		goto err7;
 	}

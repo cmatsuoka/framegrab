@@ -62,15 +62,15 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	if (fg_write_jpeg("test-color.jpg", 80, &image, data) < 0) {
+	if (fg_write_jpeg("test-color.jpg", &image, data, 0, 80) < 0) {
 		perror("fg_write_jpeg");
 		exit(EXIT_FAILURE);
 	}
-	if (fg_write_jpeg_grayscale("test-grayscale.jpg", 80, &image, data) < 0) {
+	if (fg_write_jpeg("test-grayscale.jpg", &image, data, FG_GRAYSCALE, 80) < 0) {
 		perror("fg_write_jpeg");
 		exit(EXIT_FAILURE);
 	}
-	if (fg_write_gif("test-color.gif", 80, &image, data) < 0) {
+	if (fg_write_gif("test-color.gif", &image, data, 0) < 0) {
 		perror("fg_write_jpeg");
 		exit(EXIT_FAILURE);
 	}

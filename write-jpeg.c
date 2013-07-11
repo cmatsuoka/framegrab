@@ -29,7 +29,7 @@
 #include "framegrab.h"
 #include "convert.h"
 
-int fg_write_jpeg(char *filename, int quality, struct fg_image *image, void *raw)
+int fg_write_jpeg(char *filename, struct fg_image *image, void *raw, int flags, int quality)
 {
 	struct jpeg_compress_struct cinfo;
 	struct jpeg_error_mgr jerr;
@@ -38,12 +38,21 @@ int fg_write_jpeg(char *filename, int quality, struct fg_image *image, void *raw
 	int stride;			/* physical row width in image buffer */
 	unsigned char *data;
 
-	data = malloc(image->width * image->height * 3);
-	if (data == NULL)
-		goto err;
+	if (flags & FG_GRAYSCALE) {
+		data = malloc(image->width * image->height);
+		if (data == NULL)
+			goto err;
 
-	if (fg_convert_rgb(data, raw, image) < 0)
-		goto err1;
+		if (fg_convert_grayscale(data, raw, image) < 0)
+			goto err1;
+	} else {
+		data = malloc(image->width * image->height * 3);
+		if (data == NULL)
+			goto err;
+
+		if (fg_convert_rgb(data, raw, image) < 0)
+			goto err1;
+	}
 
 	/* Allocate and initialize JPEG compression object */
 	cinfo.err = jpeg_std_error(&jerr);
@@ -58,15 +67,26 @@ int fg_write_jpeg(char *filename, int quality, struct fg_image *image, void *raw
 	/* Set parameters for compression */
 	cinfo.image_width = image->width;
 	cinfo.image_height = image->height;
-	cinfo.input_components = 3;	/* # of color components per pixel */
-	cinfo.in_color_space = JCS_RGB;
+
+	if (flags & FG_GRAYSCALE) {
+		cinfo.input_components = 1;
+		cinfo.in_color_space = JCS_GRAYSCALE;
+	} else {
+		cinfo.input_components = 3;
+		cinfo.in_color_space = JCS_RGB;
+	}
 
 	jpeg_set_defaults(&cinfo);
 	jpeg_set_quality(&cinfo, quality, TRUE);
 
 	/* Run compressor */
 	jpeg_start_compress(&cinfo, TRUE);
-	stride = image->width * 3;
+
+	if (flags & FG_GRAYSCALE) {
+		stride = image->width;
+	} else {
+		stride = image->width * 3;
+	}
 
 	while (cinfo.next_scanline < cinfo.image_height) {
 		row_pointer[0] = &data[cinfo.next_scanline * stride];
