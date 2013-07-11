@@ -26,9 +26,7 @@
 #include "framegrab.h"
 #include "convert.h"
 
-#define OLD_API
-
-#ifdef OLD_API
+#ifdef OLD_GIFLIB_API
 #define GifMakeMapObject MakeMapObject
 #define GifQuantizeBuffer QuantizeBuffer
 #define EGifOpen_(x,y,z) EGifOpen(x,y)
@@ -51,18 +49,35 @@ static void decode_planes(unsigned char *r, unsigned char *g, unsigned char *b,
 	}
 }
 
-int fg_write_gif(char *filename, struct fg_image *image, void *raw, int flags)
+static void make_grayscale(unsigned char *r, unsigned char *g, unsigned char *b,
+		int length)
+{
+	while (length--) {
+		int k = (76 * *r + 150 * *g + 29 * *b) >> 8;
+		*r++ = k;
+		*g++ = k;
+		*b++ = k;
+	}
+}
+
+
+int fg_write_gif(char *filename, struct fg_image *image, void *raw, int flags, int depth)
 {
 	GifFileType *file;
 	ColorMapObject* cmap;
 	unsigned char *data, *r, *g, *b, *qdata, *q;
 	FILE *f;
-	int i, len, colors = 256;
-#ifndef OLD_API
+	int i, len, colors;
+#ifndef OLD_GIFLIB_API
 	int error;
 #endif
 
+	/* We accept up to 256-color indexed images */
+	if (depth < 1 || depth > 8)
+		return -1;
+
 	len = image->width * image->height;
+	colors = 1 << depth;
 
 	if ((data = malloc(len * 3)) == NULL)
 		goto err;
@@ -83,6 +98,9 @@ int fg_write_gif(char *filename, struct fg_image *image, void *raw, int flags)
 		goto err5;
 
 	decode_planes(r, g, b, data, len);
+
+	if (flags & FG_GRAYSCALE)
+		make_grayscale(r, g, b, len);
 
 	/* quantize colors */
 	if ((cmap = GifMakeMapObject(colors, NULL)) == NULL)
@@ -105,7 +123,7 @@ int fg_write_gif(char *filename, struct fg_image *image, void *raw, int flags)
 	}
 
 	/* write screen description */
-	if (EGifPutScreenDesc(file, image->width, image->height, 8, 0, cmap)
+	if (EGifPutScreenDesc(file, image->width, image->height, depth, 0, cmap)
 							== GIF_ERROR) {
 		perror("EGifPutScreenDesc");
 		goto err8;

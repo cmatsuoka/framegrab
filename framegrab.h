@@ -31,12 +31,14 @@ typedef void *fg_handle;
 #define FG_GRAYSCALE	(1 << 0)
 
 /* controls */
-#define FG_CTRL_BRIGHTNESS	1
-#define FG_CTRL_CONTRAST	2
-#define FG_CTRL_SATURATION	3
-#define FG_CTRL_HUE		4
+#define FG_CTRL_BRIGHTNESS	0
+#define FG_CTRL_CONTRAST	1
+#define FG_CTRL_SATURATION	2
+#define FG_CTRL_HUE		3
 
+/* control constants */
 #define FG_DEFAULT_VALUE	INT_MIN
+
 
 struct fg_device {
 	char driver[16];
@@ -63,7 +65,7 @@ EXPORT int fg_get_frame(fg_handle, void *, size_t len);
 EXPORT int fg_get_device_info(fg_handle, struct fg_device *);
 EXPORT int fg_get_image_size(struct fg_image *);
 EXPORT int fg_write_jpeg(char *, struct fg_image *, void *, int, int);
-EXPORT int fg_write_gif(char *, struct fg_image *, void *, int);
+EXPORT int fg_write_gif(char *, struct fg_image *, void *, int, int);
 EXPORT int fg_convert_rgb(void *, void *, struct fg_image *);
 EXPORT int fg_convert_grayscale(void *, void *, struct fg_image *);
 

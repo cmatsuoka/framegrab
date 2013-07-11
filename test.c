@@ -70,7 +70,23 @@ int main(int argc, char **argv)
 		fprintf(stderr, "Error: fg_write_jpeg\n");
 		exit(EXIT_FAILURE);
 	}
-	if (fg_write_gif("test-color.gif", &image, data, 0) < 0) {
+	if (fg_write_gif("test-color-256.gif", &image, data, 0, 8) < 0) {
+		fprintf(stderr, "Error: fg_write_gif\n");
+		exit(EXIT_FAILURE);
+	}
+	if (fg_write_gif("test-color-64.gif", &image, data, 0, 6) < 0) {
+		fprintf(stderr, "Error: fg_write_gif\n");
+		exit(EXIT_FAILURE);
+	}
+	if (fg_write_gif("test-color-16.gif", &image, data, 0, 4) < 0) {
+		fprintf(stderr, "Error: fg_write_gif\n");
+		exit(EXIT_FAILURE);
+	}
+	if (fg_write_gif("test-color-4.gif", &image, data, 0, 2) < 0) {
+		fprintf(stderr, "Error: fg_write_gif\n");
+		exit(EXIT_FAILURE);
+	}
+	if (fg_write_gif("test-grayscale.gif", &image, data, FG_GRAYSCALE, 8) < 0) {
 		fprintf(stderr, "Error: fg_write_gif\n");
 		exit(EXIT_FAILURE);
 	}

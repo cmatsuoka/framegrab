@@ -1,6 +1,6 @@
 
 CC	= gcc
-CFLAGS	= -Wall -O2 -g
+CFLAGS	= -Wall -O2 -g -DOLD_GIFLIB_API
 LD	= gcc
 LDFLAGS	=
 AR	= ar
