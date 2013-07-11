@@ -343,6 +343,91 @@ int get_device_info(fg_handle handle, struct fg_device *info)
 	return 0;
 }
 
+int set_control(fg_handle handle, int parm, int val)
+{
+	struct handle_data *h = (struct handle_data *)handle;
+	struct v4l2_queryctrl queryctrl;
+	struct v4l2_control control;
+	int id;
+
+	switch (parm) {
+	case FG_CTRL_BRIGHTNESS:
+		id = V4L2_CID_BRIGHTNESS;
+		break;
+	case FG_CTRL_CONTRAST:
+		id = V4L2_CID_CONTRAST;
+		break;
+	case FG_CTRL_SATURATION:
+		id = V4L2_CID_SATURATION;
+		break;
+	case FG_CTRL_HUE:
+		id = V4L2_CID_HUE;
+		break;
+	default:
+		return -1;
+	}
+
+	memset(&queryctrl, 0, sizeof (struct v4l2_queryctrl));
+	queryctrl.id = id;
+
+	if (ioctl(h->fd, VIDIOC_QUERYCTRL, &queryctrl) < 0)
+		return -1;
+
+	if (queryctrl.flags & V4L2_CTRL_FLAG_DISABLED)
+		return -1;
+
+	memset(&control, 0, sizeof (struct v4l2_control));
+	control.id = id;
+	control.value = val;
+
+	if (ioctl(h->fd, VIDIOC_S_CTRL, &control) < 0)
+		return -1;
+
+	return 0;
+}
+
+int get_control(fg_handle handle, int parm)
+{
+	struct handle_data *h = (struct handle_data *)handle;
+	struct v4l2_queryctrl queryctrl;
+	struct v4l2_control control;
+	int id;
+
+	switch (parm) {
+	case FG_CTRL_BRIGHTNESS:
+		id = V4L2_CID_BRIGHTNESS;
+		break;
+	case FG_CTRL_CONTRAST:
+		id = V4L2_CID_CONTRAST;
+		break;
+	case FG_CTRL_SATURATION:
+		id = V4L2_CID_SATURATION;
+		break;
+	case FG_CTRL_HUE:
+		id = V4L2_CID_HUE;
+		break;
+	default:
+		return -1;
+	}
+
+	memset(&queryctrl, 0, sizeof (struct v4l2_queryctrl));
+	queryctrl.id = id;
+
+	if (ioctl(h->fd, VIDIOC_QUERYCTRL, &queryctrl) < 0)
+		return -1;
+
+	if (queryctrl.flags & V4L2_CTRL_FLAG_DISABLED)
+		return -1;
+
+	memset(&control, 0, sizeof (struct v4l2_control));
+	control.id = id;
+
+	if (ioctl(h->fd, VIDIOC_G_CTRL, &control) < 0)
+		return -1;
+
+	return control.value;
+}
+
 struct fg_driver v4l2_driver = {
 	init,
 	deinit,
@@ -350,6 +435,8 @@ struct fg_driver v4l2_driver = {
 	stop_streaming,
 	set_format,
 	get_format,
+	set_control,
+	get_control,
 	get_frame,
 	get_device_info
 };

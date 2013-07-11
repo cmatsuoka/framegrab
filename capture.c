@@ -35,6 +35,16 @@ int fg_get_format(fg_handle handle, struct fg_image *image)
 	return driver->get_format(handle, image);
 }
 
+int fg_set_control(fg_handle handle, int parm, int val)
+{
+	return driver->set_control(handle, parm, val);
+}
+
+int fg_get_control(fg_handle handle, int parm)
+{
+	return driver->get_control(handle, parm);
+}
+
 int fg_get_frame(fg_handle handle, void *data, size_t len)
 {
 	return driver->get_frame(handle, data, len);
