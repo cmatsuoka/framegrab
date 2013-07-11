@@ -22,10 +22,10 @@
  */
 
 #include <stdio.h>
-#include <jpeglib.h>
 #include <setjmp.h>
 #include <stdlib.h>
 #include <string.h>
+#include "jpeglib.h"
 #include "framegrab.h"
 #include "convert.h"
 
