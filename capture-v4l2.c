@@ -30,6 +30,7 @@
 #include <sys/mman.h>
 #include <sys/select.h>
 #include <unistd.h>
+#include <limits.h>
 #include <linux/videodev2.h>
 #include <errno.h>
 #include "framegrab.h"
@@ -52,6 +53,107 @@ struct buffer {
 };
 
 
+static int set_control(fg_handle handle, int parm, int val)
+{
+	struct handle_data *h = (struct handle_data *)handle;
+	struct v4l2_queryctrl queryctrl;
+	struct v4l2_control control;
+	int id;
+
+	switch (parm) {
+	case FG_CTRL_BRIGHTNESS:
+		id = V4L2_CID_BRIGHTNESS;
+		break;
+	case FG_CTRL_CONTRAST:
+		id = V4L2_CID_CONTRAST;
+		break;
+	case FG_CTRL_SATURATION:
+		id = V4L2_CID_SATURATION;
+		break;
+	case FG_CTRL_HUE:
+		id = V4L2_CID_HUE;
+		break;
+	default:
+		return -1;
+	}
+
+	if (val != FG_DEFAULT_VALUE && (val < 0 || val > 255))
+		return -1;
+
+	memset(&queryctrl, 0, sizeof (struct v4l2_queryctrl));
+	queryctrl.id = id;
+
+	if (ioctl(h->fd, VIDIOC_QUERYCTRL, &queryctrl) < 0) {
+		perror("VIDIOC_QUERYCTRL");
+		return -1;
+	}
+
+	if (queryctrl.flags & V4L2_CTRL_FLAG_DISABLED)
+		return -1;
+
+	memset(&control, 0, sizeof (struct v4l2_control));
+	control.id = id;
+	if (val == FG_DEFAULT_VALUE) {
+		control.value = queryctrl.default_value;
+	} else {
+		control.value = queryctrl.minimum +
+			val * (queryctrl.maximum - queryctrl.minimum) / 255;
+	}
+
+	if (ioctl(h->fd, VIDIOC_S_CTRL, &control) < 0) {
+		perror("VIDIOC_S_CTRL");
+		return -1;
+	}
+
+	return 0;
+}
+
+static int get_control(fg_handle handle, int parm)
+{
+	struct handle_data *h = (struct handle_data *)handle;
+	struct v4l2_queryctrl queryctrl;
+	struct v4l2_control control;
+	int id;
+
+	switch (parm) {
+	case FG_CTRL_BRIGHTNESS:
+		id = V4L2_CID_BRIGHTNESS;
+		break;
+	case FG_CTRL_CONTRAST:
+		id = V4L2_CID_CONTRAST;
+		break;
+	case FG_CTRL_SATURATION:
+		id = V4L2_CID_SATURATION;
+		break;
+	case FG_CTRL_HUE:
+		id = V4L2_CID_HUE;
+		break;
+	default:
+		return -1;
+	}
+
+	memset(&queryctrl, 0, sizeof (struct v4l2_queryctrl));
+	queryctrl.id = id;
+
+	if (ioctl(h->fd, VIDIOC_QUERYCTRL, &queryctrl) < 0) {
+		perror("VIDIOC_QUERYCTRL");
+		return -1;
+	}
+
+	if (queryctrl.flags & V4L2_CTRL_FLAG_DISABLED)
+		return -1;
+
+	memset(&control, 0, sizeof (struct v4l2_control));
+	control.id = id;
+
+	if (ioctl(h->fd, VIDIOC_G_CTRL, &control) < 0) {
+		perror("VIDIOC_G_CTRL");
+		return -1;
+	}
+
+	return 255 * (control.value - queryctrl.minimum) /
+			(queryctrl.maximum - queryctrl.minimum);
+}
 static int get_capabilities(struct handle_data *h, unsigned pixelformat)
 {
 	int i;
@@ -125,8 +227,12 @@ static fg_handle init(char *dev, unsigned pixelformat)
 		goto err2;
 	}
 
+	set_control(h, FG_CTRL_BRIGHTNESS, FG_DEFAULT_VALUE);
+	set_control(h, FG_CTRL_CONTRAST, FG_DEFAULT_VALUE);
+	set_control(h, FG_CTRL_SATURATION, FG_DEFAULT_VALUE);
+	set_control(h, FG_CTRL_HUE, FG_DEFAULT_VALUE);
 
-	return (fg_handle) h;
+	return (fg_handle)h;
 
       err2:
 	close(h->fd);
@@ -343,90 +449,6 @@ int get_device_info(fg_handle handle, struct fg_device *info)
 	return 0;
 }
 
-int set_control(fg_handle handle, int parm, int val)
-{
-	struct handle_data *h = (struct handle_data *)handle;
-	struct v4l2_queryctrl queryctrl;
-	struct v4l2_control control;
-	int id;
-
-	switch (parm) {
-	case FG_CTRL_BRIGHTNESS:
-		id = V4L2_CID_BRIGHTNESS;
-		break;
-	case FG_CTRL_CONTRAST:
-		id = V4L2_CID_CONTRAST;
-		break;
-	case FG_CTRL_SATURATION:
-		id = V4L2_CID_SATURATION;
-		break;
-	case FG_CTRL_HUE:
-		id = V4L2_CID_HUE;
-		break;
-	default:
-		return -1;
-	}
-
-	memset(&queryctrl, 0, sizeof (struct v4l2_queryctrl));
-	queryctrl.id = id;
-
-	if (ioctl(h->fd, VIDIOC_QUERYCTRL, &queryctrl) < 0)
-		return -1;
-
-	if (queryctrl.flags & V4L2_CTRL_FLAG_DISABLED)
-		return -1;
-
-	memset(&control, 0, sizeof (struct v4l2_control));
-	control.id = id;
-	control.value = val;
-
-	if (ioctl(h->fd, VIDIOC_S_CTRL, &control) < 0)
-		return -1;
-
-	return 0;
-}
-
-int get_control(fg_handle handle, int parm)
-{
-	struct handle_data *h = (struct handle_data *)handle;
-	struct v4l2_queryctrl queryctrl;
-	struct v4l2_control control;
-	int id;
-
-	switch (parm) {
-	case FG_CTRL_BRIGHTNESS:
-		id = V4L2_CID_BRIGHTNESS;
-		break;
-	case FG_CTRL_CONTRAST:
-		id = V4L2_CID_CONTRAST;
-		break;
-	case FG_CTRL_SATURATION:
-		id = V4L2_CID_SATURATION;
-		break;
-	case FG_CTRL_HUE:
-		id = V4L2_CID_HUE;
-		break;
-	default:
-		return -1;
-	}
-
-	memset(&queryctrl, 0, sizeof (struct v4l2_queryctrl));
-	queryctrl.id = id;
-
-	if (ioctl(h->fd, VIDIOC_QUERYCTRL, &queryctrl) < 0)
-		return -1;
-
-	if (queryctrl.flags & V4L2_CTRL_FLAG_DISABLED)
-		return -1;
-
-	memset(&control, 0, sizeof (struct v4l2_control));
-	control.id = id;
-
-	if (ioctl(h->fd, VIDIOC_G_CTRL, &control) < 0)
-		return -1;
-
-	return control.value;
-}
 
 struct fg_driver v4l2_driver = {
 	init,

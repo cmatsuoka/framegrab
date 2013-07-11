@@ -26,7 +26,9 @@
 #include "framegrab.h"
 #include "convert.h"
 
-#if 1
+#define OLD_API
+
+#ifdef OLD_API
 #define GifMakeMapObject MakeMapObject
 #define GifQuantizeBuffer QuantizeBuffer
 #define EGifOpen_(x,y,z) EGifOpen(x,y)
@@ -55,7 +57,10 @@ int fg_write_gif(char *filename, struct fg_image *image, void *raw, int flags)
 	ColorMapObject* cmap;
 	unsigned char *data, *r, *g, *b, *qdata, *q;
 	FILE *f;
-	int error, i, len, colors = 256;
+	int i, len, colors = 256;
+#ifndef OLD_API
+	int error;
+#endif
 
 	len = image->width * image->height;
 

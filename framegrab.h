@@ -36,6 +36,8 @@ typedef void *fg_handle;
 #define FG_CTRL_SATURATION	3
 #define FG_CTRL_HUE		4
 
+#define FG_DEFAULT_VALUE	INT_MIN
+
 struct fg_device {
 	char driver[16];
 	char card[32];
@@ -53,9 +55,10 @@ EXPORT fg_handle fg_init(char *, int);
 EXPORT int fg_deinit(fg_handle);
 EXPORT int fg_start(fg_handle);
 EXPORT int fg_stop(fg_handle);
-EXPORT int fg_set_control(fg_handle, int, int);
 EXPORT int fg_set_format(fg_handle, struct fg_image *);
 EXPORT int fg_get_format(fg_handle, struct fg_image *);
+EXPORT int fg_set_control(fg_handle, int, int);
+EXPORT int fg_get_control(fg_handle, int);
 EXPORT int fg_get_frame(fg_handle, void *, size_t len);
 EXPORT int fg_get_device_info(fg_handle, struct fg_device *);
 EXPORT int fg_get_image_size(struct fg_image *);

@@ -8,7 +8,7 @@ int main(int argc, char **argv)
 	struct fg_image image;
 	struct fg_device device;
 	unsigned char *data;
-	int len;
+	int len, val;
 
 	if (argc < 2) {
 		fprintf(stderr, "usage: %s <videodev>\n", argv[0]);
@@ -17,7 +17,7 @@ int main(int argc, char **argv)
 
 	printf("initialize\n");
 	if ((h = fg_init(argv[1], FG_FORMAT_YUYV)) == NULL) {
-		perror("fg_init");
+		fprintf(stderr, "Error: fg_init\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -33,20 +33,20 @@ int main(int argc, char **argv)
 
 	printf("set format to %dx%d\n", image.width, image.height);
 	if (fg_set_format(h, &image) < 0) {
-		perror("fg_set_format");
+		fprintf(stderr, "Error: fg_set_format\n");
 		exit(EXIT_FAILURE);
 	}
 
 	printf("get format: ");
 	if (fg_get_format(h, &image) < 0) {
-		perror("fg_get_format");
+		fprintf(stderr, "Error: fg_get_format\n");
 		exit(EXIT_FAILURE);
 	}
 	printf("%dx%d\n", image.width, image.height);
 
 	printf("start capture\n");
 	if (fg_start(h) < 0) {
-		perror("fg_start");
+		fprintf(stderr, "Error: fg_start\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -58,33 +58,74 @@ int main(int argc, char **argv)
 
 	printf("get a frame\n");
 	if (fg_get_frame(h, data, len) < 0) {
-		perror("fg_set_format");
+		fprintf(stderr, "Error: fg_set_format\n");
 		exit(EXIT_FAILURE);
 	}
 
 	if (fg_write_jpeg("test-color.jpg", &image, data, 0, 80) < 0) {
-		perror("fg_write_jpeg");
+		fprintf(stderr, "Error: fg_write_jpeg\n");
 		exit(EXIT_FAILURE);
 	}
 	if (fg_write_jpeg("test-grayscale.jpg", &image, data, FG_GRAYSCALE, 80) < 0) {
-		perror("fg_write_jpeg");
+		fprintf(stderr, "Error: fg_write_jpeg\n");
 		exit(EXIT_FAILURE);
 	}
 	if (fg_write_gif("test-color.gif", &image, data, 0) < 0) {
-		perror("fg_write_jpeg");
+		fprintf(stderr, "Error: fg_write_gif\n");
+		exit(EXIT_FAILURE);
+	}
+
+	printf("get brightness = ");
+	if ((val = fg_get_control(h, FG_CTRL_BRIGHTNESS)) < 0) {
+		fprintf(stderr, "Error: fg_get_control\n");
+		exit(EXIT_FAILURE);
+	}
+	printf("%d\n", val);
+
+	printf("set brightness to 30\n");
+	if (fg_set_control(h, FG_CTRL_BRIGHTNESS, 30) < 0) {
+		fprintf(stderr, "Error: fg_set_control\n");
+		exit(EXIT_FAILURE);
+	}
+
+	printf("get a frame\n");
+	if (fg_get_frame(h, data, len) < 0) {
+		fprintf(stderr, "Error: fg_set_format\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if (fg_write_jpeg("test-brightness-30.jpg", &image, data, 0, 80) < 0) {
+		fprintf(stderr, "Error: fg_write_jpeg\n");
+		exit(EXIT_FAILURE);
+	}
+
+	printf("set brightness to 230\n");
+	if (fg_set_control(h, FG_CTRL_BRIGHTNESS, 230) < 0) {
+		fprintf(stderr, "Error: fg_set_control\n");
+		exit(EXIT_FAILURE);
+	}
+
+	printf("get a frame\n");
+	if (fg_get_frame(h, data, len) < 0) {
+		fprintf(stderr, "Error: fg_set_format\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if (fg_write_jpeg("test-brightness-230.jpg", &image, data, 0, 80) < 0) {
+		fprintf(stderr, "Error: fg_write_jpeg\n");
 		exit(EXIT_FAILURE);
 	}
 	free(data);
 
 	printf("stop capture\n");
 	if (fg_stop(h) < 0) {
-		perror("fg_stop");
+		fprintf(stderr, "Error: fg_stop\n");
 		exit(EXIT_FAILURE);
 	}
 
 	printf("deinitialize\n");
 	if (fg_deinit(h) < 0) {
-		perror("fg_deinit");
+		fprintf(stderr, "Error: fg_deinit\n");
 		exit(EXIT_FAILURE);
 	}
 
