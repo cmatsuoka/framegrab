@@ -317,7 +317,7 @@ static fg_handle init(char *dev, unsigned pixelformat)
 	set_control(h, FG_CTRL_BRIGHTNESS, FG_DEFAULT_VALUE);
 	set_control(h, FG_CTRL_CONTRAST, FG_DEFAULT_VALUE);
 	set_control(h, FG_CTRL_SATURATION, FG_DEFAULT_VALUE);
-	set_control(h, FG_CTRL_HUE, FG_DEFAULT_VALUE);
+	/* set_control(h, FG_CTRL_HUE, FG_DEFAULT_VALUE); */
 
 	h->state = STATE_INIT;
 
