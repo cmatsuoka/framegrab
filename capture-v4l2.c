@@ -36,8 +36,12 @@
 #include "framegrab.h"
 #include "capture.h"
 
+#define STATE_INIT	0
+#define STATE_STREAMING	1
+
 struct handle_data {
 	int fd;
+	int state;
 	struct v4l2_capability capability;
 	struct v4l2_cropcap cropcap;
 	struct v4l2_crop crop;
@@ -189,73 +193,6 @@ static int get_capabilities(struct handle_data *h, unsigned pixelformat)
 	return -1;
 }
 
-static fg_handle init(char *dev, unsigned pixelformat)
-{
-	struct handle_data *h;
-
-	if ((h = calloc(1, sizeof(struct handle_data))) == NULL) {
-		perror("calloc");
-		goto err;
-	}
-
-	if ((h->fd = open(dev, O_RDWR)) < 0) {
-		perror(dev);
-		goto err1;
-	}
-
-	if (get_capabilities(h, pixelformat) < 0) {
-		goto err2;
-	}
-
-	h->cropcap.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-
-	if (ioctl(h->fd, VIDIOC_CROPCAP, &h->cropcap) == 0) {
-		h->crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-		h->crop.c = h->cropcap.defrect;
-		ioctl(h->fd, VIDIOC_S_CROP, &h->crop);
-	}
-
-	/* set a default format */
-        h->format.type = h->fmtdesc.type;
-        h->format.fmt.pix.field = V4L2_FIELD_ANY;
-        h->format.fmt.pix.pixelformat = h->fmtdesc.pixelformat;
-        h->format.fmt.pix.width = 640;
-        h->format.fmt.pix.height = 480;
-
-	if (ioctl(h->fd, VIDIOC_S_FMT, &h->format) < 0) {
-		perror("VIDIOC_S_FMT");
-		goto err2;
-	}
-
-	set_control(h, FG_CTRL_BRIGHTNESS, FG_DEFAULT_VALUE);
-	set_control(h, FG_CTRL_CONTRAST, FG_DEFAULT_VALUE);
-	set_control(h, FG_CTRL_SATURATION, FG_DEFAULT_VALUE);
-	set_control(h, FG_CTRL_HUE, FG_DEFAULT_VALUE);
-
-	return (fg_handle)h;
-
-      err2:
-	close(h->fd);
-      err1:
-	free(h);
-      err:
-	return NULL;
-}
-
-static int deinit(fg_handle handle)
-{
-	struct handle_data *h = (struct handle_data *)handle;
-	int ret;
-
-	if ((ret = close(h->fd)) < 0)
-		return -1;
-
-	free(h->buffers);
-	free(h);
-
-	return 0;
-}
-
 static int start_streaming(fg_handle handle)
 {
 	struct handle_data *h = (struct handle_data *)handle;
@@ -305,6 +242,8 @@ static int start_streaming(fg_handle handle)
 		goto err2;
 	}
 
+	h->state = STATE_STREAMING;
+
 	return 0;
 
       err2:
@@ -329,7 +268,82 @@ static int stop_streaming(fg_handle handle)
         	if (munmap(h->buffers[i].start, h->buffers[i].length) < 0)
 			perror("munmap");
 	}
+
+	free(h->buffers);
+
+	h->state = STATE_INIT;
  
+	return 0;
+}
+
+static fg_handle init(char *dev, unsigned pixelformat)
+{
+	struct handle_data *h;
+
+	if ((h = calloc(1, sizeof(struct handle_data))) == NULL) {
+		perror("calloc");
+		goto err;
+	}
+
+	if ((h->fd = open(dev, O_RDWR)) < 0) {
+		perror(dev);
+		goto err1;
+	}
+
+	if (get_capabilities(h, pixelformat) < 0) {
+		goto err2;
+	}
+
+	h->cropcap.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+	if (ioctl(h->fd, VIDIOC_CROPCAP, &h->cropcap) == 0) {
+		h->crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+		h->crop.c = h->cropcap.defrect;
+		ioctl(h->fd, VIDIOC_S_CROP, &h->crop);
+	}
+
+	/* set a default format */
+        h->format.type = h->fmtdesc.type;
+        h->format.fmt.pix.field = V4L2_FIELD_ANY;
+        h->format.fmt.pix.pixelformat = h->fmtdesc.pixelformat;
+        h->format.fmt.pix.width = 640;
+        h->format.fmt.pix.height = 480;
+
+	if (ioctl(h->fd, VIDIOC_S_FMT, &h->format) < 0) {
+		perror("VIDIOC_S_FMT");
+		goto err2;
+	}
+
+	set_control(h, FG_CTRL_BRIGHTNESS, FG_DEFAULT_VALUE);
+	set_control(h, FG_CTRL_CONTRAST, FG_DEFAULT_VALUE);
+	set_control(h, FG_CTRL_SATURATION, FG_DEFAULT_VALUE);
+	set_control(h, FG_CTRL_HUE, FG_DEFAULT_VALUE);
+
+	h->state = STATE_INIT;
+
+	return (fg_handle)h;
+
+      err2:
+	close(h->fd);
+      err1:
+	free(h);
+      err:
+	return NULL;
+}
+
+static int deinit(fg_handle handle)
+{
+	struct handle_data *h = (struct handle_data *)handle;
+	int ret;
+
+	if (h->state == STATE_STREAMING)
+		stop_streaming(handle);
+
+	if ((ret = close(h->fd)) < 0)
+		return -1;
+
+	free(h);
+
 	return 0;
 }
 
